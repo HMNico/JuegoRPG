@@ -1,16 +1,23 @@
 Explicacion de los archivos mas importantes:
-    1- config.py: Son las constantes que utilizo en todo el proyecto
-    2- main.py: Simplemente ejecuta el juego. Mi idea era que haya el minimo codigo aqui
-    3- mapa.py: Creacion del mapa/grilla(como objeto propio) Esto facilita a la hora de la dinamica del juego (movimientos, seleccion, ataques, etc). Mapa, es una clase que crea un Mapa, con los tiles como objeto Tile, entonces tengo muchos objetos creados que puedo hacer lo que quiera.
-    4- tile.py: La clase tile. Simplemente facilita el codigo ya que modula todo
-    5- Spritesheet.py y recursos.py: dos archivos que se utilizan para la particion de los diferentes sprites
-    6- Todas las clases de los diferentes personajes: 
-        Primero esta unidad.py. De esta heredan todos, ya que tienen las funciones y atributos generales de todo personaje
-        Segundo, aliado.py y enemigo.py. De estas heredan los dos bandos de personajes: Enemigo(explosive, spitter, zombie y jefe) y Aliado(soldado,medico,francotirador)
-        Por ultimo, los difernetes personajes.
+
+1- config.py: Son las constantes que utilizo en todo el proyecto
+
+2- main.py: Simplemente ejecuta el juego. Mi idea era que haya el minimo codigo aqui
+
+3- mapa.py: Creacion del mapa/grilla(como objeto propio) Esto facilita a la hora de la dinamica del juego (movimientos, seleccion, ataques, etc). Mapa, es una clase que crea un Mapa, con los tiles como objeto Tile, entonces tengo muchos objetos creados que puedo hacer lo que quiera.
+
+4- tile.py: La clase tile. Simplemente facilita el codigo ya que modula todo
+5- Spritesheet.py y recursos.py: dos archivos que se utilizan para la particion de los diferentes sprites
+
+6- Todas las clases de los diferentes personajes: 
+
+Primero esta unidad.py. De esta heredan todos, ya que tienen las funciones y atributos generales de todo personaje.
+Segundo, aliado.py y enemigo.py. De estas heredan los dos bandos de personajes: Enemigo(explosive, spitter, zombie y jefe) y Aliado(soldado,medico,francotirador).
+Por ultimo, los difernetes personajes.
 
 Fases de creacion del proyecto
 Roadmap que fui siguiendo (Recomendado por la IA)
+
 1. Base	Entorno, estructura del proyecto, bucle del juego
 2. Grilla isométrica: Dibujar el mapa, convertir pantalla ↔ casilla, hover	✅ Hecha
 3. Unidades	Clase Unidad, selección con clic y más: herencia (Aliado/Enemigo y cada personaje), sprites, direcciones y animaciones✅ Hecha

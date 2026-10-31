@@ -1,12 +1,12 @@
 from src.enemigo import Enemigo
 
 SPRITES_ZOMBIE = {
-    "quieto": ("boss_idle.png", 4),
-    "disparo": ("boss_attack.png", 4), 
-    "special":("boss_attack.png", 6),
-    "caminar": ("boss_walk.png", 4),
-    "hit":("boss_hit.png", 4),
-    "muerte":("boss_death.png", 7),
+    "quieto": ("zombie_idle.png", 4),
+    "disparo": ("zombie_attack.png", 4), 
+    "special":("zombie_attack.png", 6),
+    "caminar": ("zombie_walk.png", 4),
+    "hit":("zombie_hit.png", 4),
+    "muerte":("zombie_death.png", 7),
 }
 
 class Zombie(Enemigo):

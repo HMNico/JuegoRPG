@@ -5,15 +5,16 @@ import pygame
 from config import (COLOR_ALIADO, COLOR_SOMBRA, DURACION_CUADRO, DURACION_PASO)
 from src.isometria import grilla_a_pantalla, centro_de_casilla
 from src.spritesheet import cargar_hoja
-from src.direcciones import FILA_DIRECCION, DIRECCION_POR_PASO
+from src.direcciones import FILA_DIRECCION, DIRECCION_POR_PASO, signo
 
 RADIO = 12  # radio del círculo que se usa si no hay sprite
-
+ANIMACIONES_UNA_VEZ = ("atacar", "special", "hit", "muerte")   # no se repiten
 
 class Unidad:
-    COOLDOWN_ATAQUE = 2
-    def __init__(self, nombre, col, fila, vida_max, movimiento, ataque,
-                 hojas=None):
+    COOLDOWN_ESPECIAL = 2
+    APUNTA_A_CASILLA = False #True = puede apuntar a una casilla vacia(sin unidad)
+    EFECTO_ESPECIAL = None
+    def __init__(self, nombre, col, fila, vida_max, movimiento, ataque, alcance_min, alcance_max, punteria, hojas=None):
         self.nombre = nombre
         self.col = col
         self.fila = fila
@@ -21,6 +22,11 @@ class Unidad:
         self.vida = vida_max
         self.ataque = ataque
         self.movimiento = movimiento
+
+        #Para el modo ataque
+        self.alcance_min = alcance_min
+        self.alcance_max = alcance_max
+        self.punteria = punteria
 
         # --- Turno ---
         self.movimiento_restante = movimiento
@@ -58,8 +64,9 @@ class Unidad:
         return len(self.camino) > 0
 
     def mirar_hacia(self, casilla):
-        paso = (casilla[0] - self.col, casilla[1] - self.fila)
-        self.direccion = DIRECCION_POR_PASO[paso]
+        paso = (signo(casilla[0] - self.col), signo(casilla[1] - self.fila)) 
+        if paso in DIRECCION_POR_PASO:
+            self.direccion = DIRECCION_POR_PASO[paso]
 
     def actualizar_movimiento(self, tiempo):
         if not self.esta_caminando():
@@ -74,16 +81,23 @@ class Unidad:
             self.progreso= 0.0
             self.cambiar_accion("quieto")    
 
-
-
     def actualizar_sprite(self, tiempo):
         hoja = self.animaciones.get(self.accion)
         if hoja is None:
             return
         self.tiempo_acumulado += tiempo
-        while self.tiempo_acumulado >=  DURACION_CUADRO:
+        while self.tiempo_acumulado >= DURACION_CUADRO:
             self.tiempo_acumulado -= DURACION_CUADRO
-            self.cuadro_actual = (self.cuadro_actual + 1) % hoja.col
+            if self.cuadro_actual + 1 < hoja.col:
+                self.cuadro_actual += 1
+            elif self.accion == "muerte":
+                self.tiempo_acumulado = 0
+                return
+            elif self.accion in ANIMACIONES_UNA_VEZ:
+                self.cambiar_accion("quieto")
+                return
+            else:
+                self.cuadro_actual = 0
 
     def cambiar_accion(self, accion):
         """Cambia de animación y la empieza desde el primer cuadro."""
@@ -106,9 +120,47 @@ class Unidad:
     def puede_actuar(self):
         return self.puede_moverse() or self.puede_atacar() #Puede hacer algo si puede moverse o si puede atacar
     def puede_usar_especial(self):
-        return not self.puede_atacar() and self.enfriamiento == 0 #Puede usar especial si ya se reseteo el cooldown y no ataco normal
+        return self.puede_atacar() and self.enfriamiento == 0 #Puede usar especial si ya se reseteo el cooldown y no ataco normal
+
+    #Combate
+    def iniciar_ataque(self, objetivo):
+        #Gira, empieza la animación de ataque y gasta sus acciones del turno.
+        self.mirar_hacia((objetivo.col, objetivo.fila))
+        self.cambiar_accion("atacar")
+        self.ya_ataco = True
+        self.movimiento_restante = 0          # atacar termina sus acciones
+
+    def esta_atacando(self):
+        #True mientras se reproduce la animación de ataque.
+        return self.accion in ("special","atacar") and self.accion in self.animaciones
 
 
+    #ATAQUE ESPECIAL (se sobreescriben en cada unidad)
+    def zona_especial(self, mapa, ocupadas): #A que casillas puedo tirar
+        return set()
+    def es_objetivo_especial (self, unidad):
+        #Retorna true si esta unidad puede recibir el especial
+        return False
+    def iniciar_especial(self, casilla):
+        #gira, anima, termina el turno y activa el cooldown
+        self.mirar_hacia(casilla)
+        self.cambiar_accion("special")
+        self.ya_ataco = True
+        self.movimiento_restante = 0
+        self.enfriamiento = self.COOLDOWN_ESPECIAL
+
+    def area_especial(self, casilla):#Cuales son las casillas afectadas
+        return {casilla}          # por defecto, solo la casilla apuntada        
+
+    def aplicar_especial(self, objetivo):
+        #El efecto del especial. Devuelve (tipo, cantidad) para mostrarlo.
+        return None
+    
+    def curar(self, cantidad):
+        """Recupera vida sin pasarse del máximo. Devuelve cuánto curó de verdad."""
+        antes = self.vida
+        self.vida = min(self.vida_max, self.vida + cantidad)
+        return self.vida - antes    
 
     def recibir_daño(self, cantidad):
         self.vida = max(0, self.vida - cantidad)

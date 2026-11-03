@@ -1,6 +1,6 @@
 from src.tile import Tile
 from src.isometria import pantalla_a_grilla
-from config import COLOR_HOVER, COLOR_ALCANCE
+from config import COLOR_HOVER, COLOR_ALCANCE, COLOR_ZONA_ATAQUE
 
 
 #Creo la Clase mapa, un mapa con x cantidad de objetos Tile
@@ -8,6 +8,7 @@ class Mapa:
     def __init__(self, columnas, filas):
         self.columnas = columnas
         self.filas = filas
+        self.paredes = set()
         # Lista de listas: self.tiles[fila][col]. En self.tiles. tiles_fila es una fila del mapa. Al quedar ordenado, se vuelve matriz
         self.tiles = []
         for fila in range(filas):
@@ -32,13 +33,18 @@ class Mapa:
         casillax,casillay = pantalla_a_grilla(x,y)
         return self.obtener_tile(casillax, casillay) 
     
-    def dibujar(self, pantalla, tile_hover=None, color_hover= COLOR_HOVER, alcance=()):
+    def dibujar(self, pantalla, tile_hover=None, color_hover= COLOR_HOVER, alcance=(), atacables=(), color_zona=COLOR_ZONA_ATAQUE):
         for fila in self.tiles:
             for tile in fila:
                 if tile is tile_hover:
                     color = color_hover if tile is tile_hover else None
                 elif (tile.col, tile.fila) in alcance:
                     color = COLOR_ALCANCE
+                elif (tile.col, tile.fila) in atacables:
+                    color = color_zona
                 else:
                     color = None
                 tile.dibujar_tile(pantalla, color)
+
+    def hay_pared(self, col, fila):
+        return (col, fila) in self.paredes

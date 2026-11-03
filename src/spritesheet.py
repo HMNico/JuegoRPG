@@ -31,10 +31,10 @@ class HojaSprites:
         return self.cuadros[fila][col]     
 
 
-def cargar_hoja(nombre, columnas):
+def cargar_hoja(nombre, columnas, filas=FILAS_HOJA):
     """Carga y recorta una hoja una sola vez; las demás veces la reutiliza."""
     if nombre not in _cache:
         imagen = cargar_imagen(nombre) #cargo la HojaSprite entera
-        _cache[nombre] = (HojaSprites(imagen, columnas, FILAS_HOJA, ESCALA_SPRITE)
+        _cache[nombre] = (HojaSprites(imagen, columnas, filas, ESCALA_SPRITE)
                         if imagen else None) #Al crear una HojaSprite, la crea ya recortada.
     return _cache[nombre]    

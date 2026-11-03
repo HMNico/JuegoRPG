@@ -22,8 +22,9 @@ Roadmap que fui siguiendo (Recomendado por la IA)
 2. Grilla isométrica: Dibujar el mapa, convertir pantalla ↔ casilla, hover	✅ Hecha
 3. Unidades	Clase Unidad, selección con clic y más: herencia (Aliado/Enemigo y cada personaje), sprites, direcciones y animaciones✅ Hecha
 4. Movimiento	Pathfinding (BFS/A*), alcance de movimiento	✅ Hecha
-5. Sistema de turnos	Turno del jugador y del enemigo, puntos de acción	Pendiente
-6. Combate	Ataque, probabilidad de acierto, cobertura (estilo XCOM) y habilidades de cada personaje	Pendiente
+5. Sistema de turnos	Turno del jugador y del enemigo, puntos de acción	✅ Hecha
+6. Combate	Ataque, probabilidad de acierto, cobertura (estilo XCOM) y habilidades de cada personaje	✅ Hecha
+ 6.a - Turnos por unidad, no en general     Pendiente
 7. IA enemiga	Acercarse, atacar, cubrirse (decidir_turno)	Pendiente
 8. Estados del juego	Menú, juego, victoria/derrota, cambio de nivel	Pendiente
 9. Niveles	Mapas desde archivos, niveles 1 y 2	Pendiente

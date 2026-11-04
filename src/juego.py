@@ -1,6 +1,6 @@
 #Este archivo es el bucle principal
 import pygame
-from config import ANCHO, ALTO, FPS, TITULO, COLUMNAS, FILAS, COLOR_FONDO,  COLOR_TEXTO, COLOR_HOVER, COLOR_HOVER_ENEMIGO, COLOR_HOVER_ALIADO, COLOR_DAÑO, COLOR_FALLO, COLOR_ZONA_ATAQUE, COLOR_ZONA_CURA, COLOR_CURA
+from config import ANCHO, ALTO, FPS, TITULO, COLUMNAS, FILAS, COLOR_FONDO,  COLOR_TEXTO, COLOR_HOVER, COLOR_HOVER_ENEMIGO, COLOR_HOVER_ALIADO, COLOR_DAÑO, COLOR_FALLO, COLOR_ZONA_ATAQUE, COLOR_ZONA_CURA, COLOR_CURA, PAUSA_ENTRE_ENEMIGOS, PAUSA_ANTES_DE_ATACAR
 from src.mapa import Mapa
 from src.unidad import Unidad
 from src.enemigo import Enemigo
@@ -15,10 +15,8 @@ from src.jefe import Jefe
 from src.combate import casillas_atacables, tirar_ataque
 from src.efectos import TextoFlotante, EfectoAnimado
 from src.movimiento import *
+from src.isometria import centro_de_casilla
 from collections import deque
-
-
-
 
 class Juego:
     def __init__(self):
@@ -32,13 +30,14 @@ class Juego:
         self.tile_hover = None
 
         self.aliados = [
-            Medico("Ana", 4, 12),
+            Medico("Ana", 5, 12),
             Soldado("Bruno", 7, 10),       
             Francotirador("Pedro", 10, 12),]  
         self.enemigos = [
-            Spitter("Spitter", 4, 2),
+            #Spitter("Spitter", 4, 2),
+            Spitter("Spitter", 5, 10),
             Zombie("Zombie",7, 4),
-            Explosive("Explosive", 10, 2),
+            Explosive("Explosive", 6, 8),
             ]
         self.unidad_seleccionada = None
         self.unidad_en_movimiento = None           
@@ -55,7 +54,12 @@ class Juego:
         self.textos = []
         self.efectos = []
         self.enemigo_actual = None
+        self.paso_enemigo = None # "mover" o "atacar"
+        self.espera = 0 
 
+        #puntaje de las casillas (la utilizo para prioridad)
+        self.fuente_chica = pygame.font.SysFont(None, 18)
+        self.mostrar_puntaje = False
         # Turnos
         self.ronda = 1
         self.iniciar_turno("jugador")  
@@ -87,6 +91,8 @@ class Juego:
                     self.alternar_modo("atacar")       
                 elif evento.key == pygame.K_e:
                     self.alternar_modo("especial")
+                elif evento.key == pygame.K_n:
+                    self.mostrar_puntaje = not self.mostrar_puntaje
 
     def algun_aliado_puede_actuar(self):
         return any(a.puede_actuar() for a in self.aliados if a.esta_vivo())
@@ -157,32 +163,47 @@ class Juego:
         self.alcance = {}
         self.iniciar_turno("enemigo")
 
-    def jugar_turno_enemigo(self):
+    def jugar_turno_enemigo(self, tiempo):
         if self.hay_accion_en_curso():      # hay un enemigo caminando o atacando: esperar
             return
-        if self.enemigo_actual is not None:
-            enemigo = self.enemigo_actual
-            self.enemigo_actual = None
-            a_tiro = self.aliados_a_tiro(enemigo, (enemigo.col, enemigo.fila))
-            objetivo = enemigo.elegir_objetivo(a_tiro)
-            if objetivo is not None:
-                self.atacar(enemigo, objetivo)
-            return
-
-        if not self.cola_enemigos:                     # ya jugaron todos
-            self.ronda += 1
-            self.iniciar_turno("jugador")
+        if self.espera>0:
+            self.espera -= tiempo
             return
         
-        enemigo = self.cola_enemigos.popleft()         # le toca al siguiente
-        alcance = self.calcular_alcance_unidad(enemigo)
-        casillas_de_ataque = {c for c in alcance if self.aliados_a_tiro(enemigo, c)}
-        destino = enemigo.elegir_destino(alcance, self.aliados, casillas_de_ataque)
+        # Elegir al siguiente enemigo (o devolver el turno)
+        if self.enemigo_actual is None:
+            if not self.cola_enemigos:
+                self.unidad_seleccionada = None
+                self.ronda += 1
+                self.iniciar_turno("jugador")
+                return
+            self.enemigo_actual = self.cola_enemigos.popleft()
+            self.unidad_seleccionada = self.enemigo_actual
+            self.paso_enemigo = "mover"
+            self.espera = PAUSA_ENTRE_ENEMIGOS
+            return
+        enemigo = self.enemigo_actual
 
-        if destino is not None and destino != (enemigo.col, enemigo.fila):
-            self.mover(enemigo, destino, alcance)
+        #moverse
+        if self.paso_enemigo == "mover":
+            alcance = self.calcular_alcance_unidad(enemigo)
+            destino = enemigo.elegir_destino(alcance, self)
+            if destino is not None and destino != (enemigo.col, enemigo.fila):
+                self.mover(enemigo, destino, alcance)
+            self.paso_enemigo = "atacar"
+            self.espera = PAUSA_ANTES_DE_ATACAR
+            return
 
-        self.enemigo_actual = enemigo
+        #atacar
+        self.enemigo_actual = None
+        casilla_especial = enemigo.elegir_especial(self)
+        if casilla_especial is not None:
+            self.usar_especial(enemigo, casilla_especial)
+            return
+        a_tiro = self.aliados_a_tiro(enemigo, (enemigo.col, enemigo.fila))
+        objetivo = enemigo.elegir_objetivo(a_tiro)
+        if objetivo is not None:
+            self.atacar(enemigo, objetivo)
 
     def mover(self, unidad : Unidad, destino, alcance):
         camino = reconstruir_camino(alcance, destino)
@@ -253,7 +274,7 @@ class Juego:
 
     def resolver_ataque(self):
         tipo, atacante, objetivo, acierto = self.ataque_en_curso
-        if atacante.esta_atacando():
+        if atacante.esta_atacando() and not atacante.llego_al_impacto():
             return
         self.ataque_en_curso = None
         if tipo == "especial":
@@ -268,6 +289,7 @@ class Juego:
         else:
             self.textos.append(TextoFlotante("FALLÓ", COLOR_FALLO, x, y - 70))
         self.actualizar_alcance()
+
     def hay_accion_en_curso(self):
         return self.unidad_en_movimiento is not None or self.ataque_en_curso is not None
 
@@ -275,6 +297,10 @@ class Juego:
         ocupadas = self.casillas_ocupadas(excepto=unidad)
         zona = casillas_atacables(self.mapa, desde, unidad.alcance_min, unidad.alcance_max, ocupadas)
         return [a for a in self.aliados if a.esta_vivo() and (a.col, a.fila) in zona]
+
+    def amenazas_en(self, casilla, unidad): 
+        ocupadas = self.casillas_ocupadas(excepto=unidad) | {casilla} #Las casillas de los vivos (menos la del enemigo a chequear), mas 
+        return [a for a in self.aliados if a.esta_vivo() and casilla in casillas_atacables(self.mapa, (a.col, a.fila), a.alcance_min, a.alcance_max, ocupadas)]
 
     def actualizar_objetivo(self):
         u = self.unidad_seleccionada
@@ -317,6 +343,7 @@ class Juego:
             unidad = self.unidad_en(*casilla)
             if unidad is not None:
                 self.mostrar_resultado_especial(atacante.aplicar_especial(unidad), unidad)
+        atacante.despues_del_especial()
 
     def mostrar_efecto(self, efecto, casilla):
         abajo, arriba, columnas = efecto
@@ -353,7 +380,7 @@ class Juego:
         self.textos = [t for t in self.textos if not t.terminado()]
         self.tile_hover = self.mapa.tile_en_pantalla(*pygame.mouse.get_pos())
         if self.turno == "enemigo":
-            self.jugar_turno_enemigo()
+            self.jugar_turno_enemigo(tiempo)
         if (self.turno == "jugador" and not self.hay_accion_en_curso() and any(a.esta_vivo() for a in self.aliados) and not self.algun_aliado_puede_actuar()):
             self.terminar_turno_jugador()
         if self.modo != "mover":
@@ -367,6 +394,8 @@ class Juego:
         self.dibujar_efectos("debajo")
         self.dibujar_unidades()
         self.dibujar_efectos("encima")
+        if self.mostrar_puntaje and isinstance(self.unidad_seleccionada, Enemigo):
+            self.dibujar_puntaje(self.unidad_seleccionada)
         for texto in self.textos:
             texto.dibujar(self.pantalla, self.fuente)
         self.dibujar_info()
@@ -388,6 +417,17 @@ class Juego:
         for unidad in sorted(unidades, key=lambda unidad: (unidad.esta_vivo(), unidad.col + unidad.fila)):
             unidad.dibujar(self.pantalla, unidad is self.unidad_seleccionada)
 
+    def dibujar_puntaje(self, enemigo):
+        vivos = [a for a in self.aliados if a.esta_vivo()]
+        if not vivos:
+            return
+        ocupadas = self.casillas_ocupadas(excepto=enemigo) | self.mapa.paredes
+        alcance = calcular_alcance(self.mapa, (enemigo.col, enemigo.fila), enemigo.movimiento, ocupadas)
+        for casilla in alcance:
+            nota = enemigo.puntuar_casilla(casilla, self, vivos)
+            x, y = centro_de_casilla(*casilla)
+            imagen = self.fuente_chica.render(str(nota), True, COLOR_TEXTO)
+            self.pantalla.blit(imagen, (x - imagen.get_width() // 2, y - imagen.get_height() // 2))
 
     # info para el HUD
     def dibujar_info(self):

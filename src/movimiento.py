@@ -38,5 +38,6 @@ def reconstruir_camino(desdeDondeVino, destino):
     return camino
 
 def distancia(a, b):
-    """Distancia entre dos casillas si no hubiera obstáculos."""
-    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])#La formula es: col + fila . Ej = max (2,3) = 2 + 3 = 5
+def distancia_diagonal(a, b): #Hace lo mismo que distancia, pero la mide con las diagonales
+    return max(abs(a[0] - b[0]), abs(a[1] - b[1])) #La formula es: max(col, fila). Ej = max (2,3) = 3

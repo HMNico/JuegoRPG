@@ -14,6 +14,7 @@ class Unidad:
     COOLDOWN_ESPECIAL = 2
     APUNTA_A_CASILLA = False #True = puede apuntar a una casilla vacia(sin unidad)
     EFECTO_ESPECIAL = None
+    CUADRO_IMPACTO = None
     def __init__(self, nombre, col, fila, vida_max, movimiento, ataque, alcance_min, alcance_max, punteria, hojas=None):
         self.nombre = nombre
         self.col = col
@@ -31,7 +32,11 @@ class Unidad:
         # --- Turno ---
         self.movimiento_restante = movimiento
         self.ya_ataco = False
+
+        # --- Especial ---
         self.enfriamiento = 0
+        self.visible = True
+        self.desaparecer_al_terminar = False
         # --- Movimiento ---
         self.camino = []
         self.progreso = 0.0
@@ -94,6 +99,8 @@ class Unidad:
                 self.tiempo_acumulado = 0
                 return
             elif self.accion in ANIMACIONES_UNA_VEZ:
+                if self.desaparecer_al_terminar:
+                    self.visible = False
                 self.cambiar_accion("quieto")
                 return
             else:
@@ -133,7 +140,8 @@ class Unidad:
     def esta_atacando(self):
         #True mientras se reproduce la animación de ataque.
         return self.accion in ("special","atacar") and self.accion in self.animaciones
-
+    def llego_al_impacto(self):
+        return self.CUADRO_IMPACTO is not None and self.cuadro_actual >= self.CUADRO_IMPACTO
 
     #ATAQUE ESPECIAL (se sobreescriben en cada unidad)
     def zona_especial(self, mapa, ocupadas): #A que casillas puedo tirar
@@ -178,7 +186,12 @@ class Unidad:
             y = y + (y2 - y) * self.progreso
         return int(x), int(y)
 
+    def despues_del_especial(self):
+        pass    
+
     def dibujar(self, pantalla, seleccionada=False):
+        if not self.visible:
+            return
         cx, cy = self.centro_en_pantalla()
 
         # 1) Anillo de selección (en el piso)

@@ -25,7 +25,7 @@ Roadmap que fui siguiendo (Recomendado por la IA)
 5. Sistema de turnos	Turno del jugador y del enemigo, puntos de acción	✅ Hecha
 6. Combate	Ataque, probabilidad de acierto, cobertura (estilo XCOM) y habilidades de cada personaje	✅ Hecha
  6.a - Turnos por unidad, no en general     Pendiente
-7. IA enemiga	Acercarse, atacar, cubrirse (decidir_turno)	Pendiente
+7. IA enemiga	Acercarse, atacar, cubrirse (decidir_turno)	✅ Hecha
 8. Estados del juego	Menú, juego, victoria/derrota, cambio de nivel	Pendiente
 9. Niveles	Mapas desde archivos, niveles 1 y 2	Pendiente
 10. Jefe final	Jefe con habilidades y fases propias	Pendiente (la clase Jefe ya existe)

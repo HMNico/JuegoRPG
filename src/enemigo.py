@@ -5,19 +5,38 @@ from src.movimiento import distancia
 
 class Enemigo(Unidad):
     COLOR_SELECCION = COLOR_SELECCION_ENEMIGO
-    def elegir_destino(self, alcance, aliados, casillas_de_ataque):
-        if casillas_de_ataque:
-            return min(casillas_de_ataque, key=lambda c: distancia(c, (self.col, self.fila)))
-        vivos = [a for a in aliados if a.esta_vivo()]
+    #Variables que tienen peso a la hora de decidir
+    PESO_ATAQUE = 100 
+    PESO_DISTANCIA = 1
+    PESO_VIDA = 2
+    PESO_PELIGRO = 0
+    def elegir_destino(self, alcance, juego):
+        vivos = [a for a in juego.aliados if a.esta_vivo()]
         if not vivos:
             return None
+        return max(alcance, key=lambda c: self.puntuar_casilla(c, juego, vivos))
 
-        def distancia_al_mas_cercano(casilla):
-            return min(distancia(casilla, (a.col, a.fila)) for a in vivos)
-
-        return min(alcance, key=distancia_al_mas_cercano)
-
+    def puntuar_casilla(self, casilla, juego, vivos):
+        puntaje = 0
+        a_tiro = juego.aliados_a_tiro(self, casilla)
+        if a_tiro:
+            puntaje += max(self.puntuar_objetivo(a) for a in a_tiro)
+        puntaje -= self.PESO_DISTANCIA * self.distancia_de_interes(casilla, vivos)
+        if self.PESO_PELIGRO:
+            puntaje -= self.PESO_PELIGRO * len(juego.amenazas_en(casilla, self))
+        return puntaje
+    
+    def puntuar_objetivo(self, aliado):
+        return self.PESO_ATAQUE - self.PESO_VIDA * aliado.vida
+    
     def elegir_objetivo(self, aliados_a_tiro):
         if not aliados_a_tiro:
             return None
-        return min(aliados_a_tiro, key=lambda a: a.vida)
+        return max(aliados_a_tiro, key=self.puntuar_objetivo)
+    
+    def distancia_de_interes(self, casilla, vivos): #Por defecto (si no se sobreescibe) va al aliado mas cerca
+        return min(distancia(casilla, (a.col, a.fila)) for a in vivos)
+
+    def elegir_especial(self, juego):
+        return None
+    

@@ -1,17 +1,11 @@
 #Este archivo es el bucle principal
 import pygame
-from config import ANCHO, COLUMNAS, FILAS, COLOR_FONDO,  COLOR_TEXTO, COLOR_HOVER, COLOR_HOVER_ENEMIGO, COLOR_HOVER_ALIADO, COLOR_DAÑO, COLOR_FALLO, COLOR_ZONA_ATAQUE, COLOR_ZONA_CURA, COLOR_CURA, PAUSA_ENTRE_ENEMIGOS, PAUSA_ANTES_DE_ATACAR, PAUSA_FIN
+from config import ANCHO, COLOR_FONDO,  COLOR_TEXTO, COLOR_HOVER, COLOR_HOVER_ENEMIGO, COLOR_HOVER_ALIADO, COLOR_DAÑO, COLOR_FALLO, COLOR_ZONA_ATAQUE, COLOR_ZONA_CURA, COLOR_CURA, PAUSA_ENTRE_ENEMIGOS, PAUSA_ANTES_DE_ATACAR, PAUSA_FIN
 from src.escenas.escena import Escena
-from src.tablero.mapa import Mapa
+from src.tablero.nivel import cargar_nivel, crear_unidad
 from src.unidades.unidad import Unidad
 from src.unidades.enemigo import Enemigo
 from src.unidades.aliado import Aliado
-from src.unidades.medico import Medico
-from src.unidades.soldado import Soldado
-from src.unidades.francotirador import Francotirador
-from src.unidades.zombie import Zombie
-from src.unidades.spitter import Spitter
-from src.unidades.explosive import Explosive
 from src.unidades.jefe import Jefe
 from src.tablero.combate import casillas_atacables, tirar_ataque
 from src.graficos.efectos import TextoFlotante, EfectoAnimado
@@ -21,23 +15,13 @@ from collections import deque
 from src.interfaz.hud import HUD
 
 class Partida(Escena):
-    def __init__(self, juego):
+    def __init__(self, juego, numero_nivel=1):
         super().__init__(juego)
         self.pantalla = juego.pantalla
         self.fuente = pygame.font.SysFont(None, 26)
-        self.mapa = Mapa(COLUMNAS, FILAS)
+        self.numero_nivel = numero_nivel
+        self.nombre_nivel, self.mapa, self.aliados, self.enemigos, self.refuerzos = cargar_nivel(numero_nivel)
         self.tile_hover = None
-
-        self.aliados = [
-            Medico("Ana", 5, 12),
-            Soldado("Bruno", 7, 10),       
-            Francotirador("Pedro", 10, 12),]  
-        self.enemigos = [
-            #Spitter("Spitter", 4, 2),
-            Spitter("Spitter", 5, 10),
-            Zombie("Zombie",7, 4),
-            Explosive("Explosive", 6, 8),
-            ]
         self.unidad_seleccionada = None
         self.unidad_en_movimiento = None           
         self.objetivo = None
@@ -63,6 +47,8 @@ class Partida(Escena):
         self.ronda = 1
         self.hud = HUD(self)
         self.iniciar_turno("jugador")  
+        self.hud.mostrar_cartel(self.nombre_nivel)
+        self.cache_distancias = {}
 
         #Interfaz
         self.resultado= None
@@ -147,8 +133,34 @@ class Partida(Escena):
             self.alcance = self.calcular_alcance_unidad(u)
         else:
             self.alcance = {}
+
+    def llamar_refuerzos(self):
+        llegan = [r for r in self.refuerzos if r["ronda"] == self.ronda]
+        for refuerzo in llegan:
+            casilla = self.casilla_para_refuerzo(refuerzo)
+            if casilla is not None:
+                self.enemigos.append(crear_unidad(refuerzo["tipo"], *casilla))
+        if llegan:
+            self.hud.mostrar_cartel("¡REFUERZOS!")
+
+    def casilla_para_refuerzo(self, refuerzo):
+        col= refuerzo.get("columna")
+        fila = refuerzo.get("fila")
+        if col is not None and fila is not None:
+            candidatas = [(col, fila)]
+        elif col is not None:
+            candidatas = [(col, f) for f in range(self.mapa.filas)]
+        else:
+            candidatas = [(c, fila) for c in range(self.mapa.columnas)]
+        ocupadas = self.casillas_ocupadas() | self.mapa.paredes
+        libres = [c for c in candidatas if c not in ocupadas]
+        vivos = [a for a in self.aliados if a.esta_vivo()]
+        if not libres or not vivos:
+            return None
+        return min(libres, key=lambda c: min(distancia(c, (a.col, a.fila)) for a in vivos))
     # ---------- Turnos ----------
     def iniciar_turno(self, bando):
+        self.cache_distancias = {}
         self.turno = bando
         unidades = self.aliados if bando == "jugador" else self.enemigos
         for unidad in unidades:
@@ -156,6 +168,8 @@ class Partida(Escena):
         if bando == "enemigo":
             self.cola_enemigos = deque(e for e in self.enemigos if e.esta_vivo())
         self.hud.mostrar_cartel("TU TURNO" if bando == "jugador" else "TURNO ENEMIGO")
+        if bando == "jugador":
+            self.llamar_refuerzos()
 
     def terminar_turno_jugador(self):
         if self.turno != "jugador" or self.hay_accion_en_curso():
@@ -300,6 +314,12 @@ class Partida(Escena):
         zona = casillas_atacables(self.mapa, desde, unidad.alcance_min, unidad.alcance_max, ocupadas)
         return [a for a in self.aliados if a.esta_vivo() and (a.col, a.fila) in zona]
 
+    def distancias_a(self, unidades):
+        clave = frozenset((u.col, u.fila) for u in unidades)
+        if clave not in self.cache_distancias:
+            self.cache_distancias[clave] = distancias_desde(self.mapa, clave, self.mapa.paredes)
+        return self.cache_distancias[clave]
+
     def amenazas_en(self, casilla, unidad): 
         ocupadas = self.casillas_ocupadas(excepto=unidad) | {casilla} #Las casillas de los vivos (menos la del enemigo a chequear), mas 
         return [a for a in self.aliados if a.esta_vivo() and casilla in casillas_atacables(self.mapa, (a.col, a.fila), a.alcance_min, a.alcance_max, ocupadas)]
@@ -406,7 +426,7 @@ class Partida(Escena):
         if self.resultado is not None:
             self.espera_fin -= tiempo
             if self.espera_fin <= 0:
-                self.juego.fin_de_partida(self.resultado, self.resumen())
+                self.juego.fin_de_partida(self.resultado, self.resumen(), self.numero_nivel)
             return
         if self.turno == "enemigo":
             self.jugar_turno_enemigo(tiempo)
@@ -441,9 +461,9 @@ class Partida(Escena):
         self.efectos.append(EfectoAnimado("curar_efecto_arriba.png", 3, casilla, "encima"))
 
     def dibujar_unidades(self):
-        unidades = self.aliados + self.enemigos
-        for unidad in sorted(unidades, key=lambda unidad: (unidad.esta_vivo(), unidad.col + unidad.fila)):
-            unidad.dibujar(self.pantalla, unidad is self.unidad_seleccionada)
+        objetos = self.aliados + self.enemigos + self.mapa.bloques
+        for objeto in sorted(objetos, key=lambda o: o.orden_de_dibujo()):
+            objeto.dibujar(self.pantalla, objeto is self.unidad_seleccionada)
 
     def dibujar_puntaje(self, enemigo):
         vivos = [a for a in self.aliados if a.esta_vivo()]

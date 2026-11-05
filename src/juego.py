@@ -17,6 +17,7 @@ class Juego:
         self.escena = None
         self.ir_al_menu()
         self.volumenes = {"Música": 0.7, "Efectos": 0.7}
+        self.totales = {}
             
 
     def cambiar_escena(self, escena):
@@ -41,11 +42,16 @@ class Juego:
     def ir_al_menu(self):
         self.cambiar_escena(MenuPrincipal(self))
 
-    def nueva_partida(self):
-        self.cambiar_escena(Partida(self))
+    def nueva_partida(self, numero_nivel=1):
+        if numero_nivel == 1:
+            self.totales = {}
+        self.cambiar_escena(Partida(self, numero_nivel))
 
-    def fin_de_partida(self, resultado, resumen):
-        self.cambiar_escena(FinDePartida(self, resultado, resumen))
+    def fin_de_partida(self, resultado, resumen, numero_nivel):
+        if resultado == "victoria":
+            for clave, valor in resumen.items():
+                self.totales[clave] = self.totales.get(clave, 0) + valor        
+        self.cambiar_escena(FinDePartida(self, resultado, resumen, numero_nivel))
 
     def pausar(self, partida):
         self.cambiar_escena(Pausa(self, partida))

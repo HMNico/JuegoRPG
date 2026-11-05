@@ -37,6 +37,21 @@ def reconstruir_camino(desdeDondeVino, destino):
     camino.reverse()                             # estaba de atrás hacia adelante
     return camino
 
+def distancias_desde(mapa, origenes, bloqueadas):
+    """Pasos caminando desde cada casilla hasta el origen más cercano."""
+    distancias = {o: 0 for o in origenes}
+    cola = deque(origenes)
+    while cola:
+        actual = cola.popleft()
+        col, fila = actual
+        for dcol, dfila in DIRECCION_POR_PASO:
+            vecina = (col + dcol, fila + dfila)
+            if vecina in distancias or not mapa.esta_dentro(*vecina) or vecina in bloqueadas:
+                continue
+            distancias[vecina] = distancias[actual] + 1
+            cola.append(vecina)
+    return distancias
+
 def distancia(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])#La formula es: col + fila . Ej = max (2,3) = 2 + 3 = 5
 def distancia_diagonal(a, b): #Hace lo mismo que distancia, pero la mide con las diagonales

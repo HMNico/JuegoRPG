@@ -174,6 +174,9 @@ class Unidad:
         self.vida = max(0, self.vida - cantidad)
         self.cambiar_accion("hit" if self.esta_vivo() else "muerte")
 
+    def orden_de_dibujo(self):
+        return (self.esta_vivo(), self.col + self.fila)
+
     def esta_vivo(self):
         return self.vida > 0
 

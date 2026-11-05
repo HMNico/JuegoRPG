@@ -23,6 +23,6 @@ class Spitter(Enemigo):
             puntaje += self.BONUS_Medico
         return puntaje
 
-    def distancia_de_interes(self, casilla, vivos):
+    def distancia_de_interes(self, casilla, vivos, juego):
         Medicos = [a for a in vivos if isinstance(a, Medico)]
-        return super().distancia_de_interes(casilla, Medicos or vivos)    
+        return super().distancia_de_interes(casilla, Medicos or vivos, juego)    

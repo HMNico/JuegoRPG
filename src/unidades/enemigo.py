@@ -21,7 +21,7 @@ class Enemigo(Unidad):
         a_tiro = partida.aliados_a_tiro(self, casilla)
         if a_tiro:
             puntaje += max(self.puntuar_objetivo(a) for a in a_tiro)
-        puntaje -= self.PESO_DISTANCIA * self.distancia_de_interes(casilla, vivos)
+        puntaje -= self.PESO_DISTANCIA * self.distancia_de_interes(casilla, vivos, partida)
         if self.PESO_PELIGRO:
             puntaje -= self.PESO_PELIGRO * len(partida.amenazas_en(casilla, self))
         return puntaje
@@ -34,8 +34,8 @@ class Enemigo(Unidad):
             return None
         return max(aliados_a_tiro, key=self.puntuar_objetivo)
     
-    def distancia_de_interes(self, casilla, vivos): #Por defecto (si no se sobreescibe) va al aliado mas cerca
-        return min(distancia(casilla, (a.col, a.fila)) for a in vivos)
+    def distancia_de_interes(self, casilla, vivos, juego): #Por defecto (si no se sobreescibe) va al aliado mas cerca
+        return juego.distancias_a(vivos).get(casilla, 999)
 
     def elegir_especial(self, partida):
         return None

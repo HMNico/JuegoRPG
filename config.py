@@ -58,10 +58,19 @@ ORIGEN_X, ORIGEN_Y = ANCHO // 2,  100  # dónde se dibuja la casilla (0,0)
 import os
 CARPETA_BASE = os.path.dirname(os.path.abspath(__file__))
 CARPETA_SPRITES = os.path.join(CARPETA_BASE, "assets", "sprites")
+CARPETA_MAPAS = os.path.join(CARPETA_BASE, "assets", "mapas")
 FILAS_HOJA = 4 #Las spritesheets tienen 4 filas todas (4 direcciones)
 PROPORCION_PIES = 0.94 #los pies estan al 94% del alto del cuadro
 ESCALA_SPRITE = 0.5          # se dibuja a la mitad de tamaño
 DURACION_CUADRO = 120
+
+#Paredes
+#Paredes
+ALTURA_PARED = 30
+COLOR_PARED_TECHO = (150, 150, 160)
+COLOR_PARED_IZQ = (105, 105, 118)
+COLOR_PARED_DER = (80, 80, 92)
+COLOR_PARED_BORDE = (50, 50, 60)
 
 #Movimiento
 DURACION_PASO = 300

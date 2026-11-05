@@ -1,6 +1,7 @@
 from src.tablero.tile import Tile
 from src.tablero.isometria import pantalla_a_grilla
 from config import COLOR_HOVER, COLOR_ALCANCE, COLOR_ZONA_ATAQUE
+from src.tablero.pared import Pared
 
 
 #Creo la Clase mapa, un mapa con x cantidad de objetos Tile
@@ -8,7 +9,9 @@ class Mapa:
     def __init__(self, columnas, filas):
         self.columnas = columnas
         self.filas = filas
-        self.paredes = set()
+        #Dos variables para la pared
+        self.paredes = set() #este es para la logica
+        self.bloques = [] #este es para dibujarlo
         # Lista de listas: self.tiles[fila][col]. En self.tiles. tiles_fila es una fila del mapa. Al quedar ordenado, se vuelve matriz
         self.tiles = []
         for fila in range(filas):
@@ -17,6 +20,9 @@ class Mapa:
                 tiles_fila.append(Tile(col, fila))
             self.tiles.append(tiles_fila)
 
+    def agregar_pared(self, col, fila):
+        self.paredes.add((col, fila))
+        self.bloques.append(Pared(col, fila))
 
     def esta_dentro(self, col, fila):
         """True si (col, fila) es una casilla válida del mapa."""

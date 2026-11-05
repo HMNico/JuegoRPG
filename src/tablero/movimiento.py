@@ -1,5 +1,5 @@
 from collections import deque
-from src.direcciones import DIRECCION_POR_PASO
+from src.tablero.direcciones import DIRECCION_POR_PASO
 
 def calcular_alcance(mapa, inicio, movimiento, ocupadas):
     """Devuelve un diccionario {casilla: casilla_anterior} con todas las casillas

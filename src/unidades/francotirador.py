@@ -1,6 +1,6 @@
-from src.aliado import Aliado
-from src.enemigo import Enemigo
-from src.combate import casillas_atacables, tirar_ataque
+from src.unidades.aliado import Aliado
+from src.unidades.enemigo import Enemigo
+from src.tablero.combate import casillas_atacables, tirar_ataque
 
 SPRITES_FRANCOTIRADOR = {
     "quieto": ("sniper_idle.png", 4),

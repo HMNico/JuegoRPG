@@ -1,5 +1,5 @@
-from src.enemigo import Enemigo
-from src.medico import Medico
+from src.unidades.enemigo import Enemigo
+from src.unidades.medico import Medico
 
 SPRITES_SPITTER = {
     "quieto": ("spitter_idle.png", 4),

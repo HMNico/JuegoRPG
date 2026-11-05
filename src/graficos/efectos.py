@@ -1,6 +1,6 @@
 from config import DURACION_CUADRO
-from src.spritesheet import cargar_hoja
-from src.isometria import centro_de_casilla
+from src.graficos.spritesheet import cargar_hoja
+from src.tablero.isometria import centro_de_casilla
 
 class EfectoAnimado:
     def __init__(self, archivo,columna, casilla, capa):

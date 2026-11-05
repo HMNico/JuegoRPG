@@ -1,23 +1,24 @@
 #Este archivo es el bucle principal
 import pygame
-from config import ANCHO, ALTO, FPS, TITULO, COLUMNAS, FILAS, COLOR_FONDO,  COLOR_TEXTO, COLOR_HOVER, COLOR_HOVER_ENEMIGO, COLOR_HOVER_ALIADO, COLOR_DAÑO, COLOR_FALLO, COLOR_ZONA_ATAQUE, COLOR_ZONA_CURA, COLOR_CURA, PAUSA_ENTRE_ENEMIGOS, PAUSA_ANTES_DE_ATACAR
-from src.escena import Escena
-from src.mapa import Mapa
-from src.unidad import Unidad
-from src.enemigo import Enemigo
-from src.aliado import Aliado
-from src.medico import Medico
-from src.soldado import Soldado
-from src.francotirador import Francotirador
-from src.zombie import Zombie
-from src.spitter import Spitter
-from src.explosive import Explosive
-from src.jefe import Jefe
-from src.combate import casillas_atacables, tirar_ataque
-from src.efectos import TextoFlotante, EfectoAnimado
-from src.movimiento import *
-from src.isometria import centro_de_casilla
+from config import ANCHO, COLUMNAS, FILAS, COLOR_FONDO,  COLOR_TEXTO, COLOR_HOVER, COLOR_HOVER_ENEMIGO, COLOR_HOVER_ALIADO, COLOR_DAÑO, COLOR_FALLO, COLOR_ZONA_ATAQUE, COLOR_ZONA_CURA, COLOR_CURA, PAUSA_ENTRE_ENEMIGOS, PAUSA_ANTES_DE_ATACAR, PAUSA_FIN
+from src.escenas.escena import Escena
+from src.tablero.mapa import Mapa
+from src.unidades.unidad import Unidad
+from src.unidades.enemigo import Enemigo
+from src.unidades.aliado import Aliado
+from src.unidades.medico import Medico
+from src.unidades.soldado import Soldado
+from src.unidades.francotirador import Francotirador
+from src.unidades.zombie import Zombie
+from src.unidades.spitter import Spitter
+from src.unidades.explosive import Explosive
+from src.unidades.jefe import Jefe
+from src.tablero.combate import casillas_atacables, tirar_ataque
+from src.graficos.efectos import TextoFlotante, EfectoAnimado
+from src.tablero.movimiento import *
+from src.tablero.isometria import centro_de_casilla
 from collections import deque
+from src.interfaz.hud import HUD
 
 class Partida(Escena):
     def __init__(self, juego):
@@ -60,10 +61,19 @@ class Partida(Escena):
         self.mostrar_puntaje = False
         # Turnos
         self.ronda = 1
+        self.hud = HUD(self)
         self.iniciar_turno("jugador")  
+
+        #Interfaz
+        self.resultado= None
+        self.espera_fin = 0
 
     #eventos 
     def manejar_evento(self, evento):
+        if self.resultado is not None:
+            return
+        if self.hud.manejar_evento(evento):
+            return        
         if evento.type == pygame.MOUSEBUTTONDOWN:
             if evento.button == 1: #1 significa click izquierdo
                 self.al_hacer_clic(*evento.pos)
@@ -79,6 +89,11 @@ class Partida(Escena):
                 self.alternar_modo("especial")
             elif evento.key == pygame.K_n:
                 self.mostrar_puntaje = not self.mostrar_puntaje
+            elif evento.key == pygame.K_ESCAPE:
+                if self.modo != "mover":
+                    self.cancelar_ataque()
+                else:
+                    self.juego.pausar(self)
 
     def algun_aliado_puede_actuar(self):
         return any(a.puede_actuar() for a in self.aliados if a.esta_vivo())
@@ -140,6 +155,7 @@ class Partida(Escena):
             unidad.iniciar_turno()
         if bando == "enemigo":
             self.cola_enemigos = deque(e for e in self.enemigos if e.esta_vivo())
+        self.hud.mostrar_cartel("TU TURNO" if bando == "jugador" else "TURNO ENEMIGO")
 
     def terminar_turno_jugador(self):
         if self.turno != "jugador" or self.hay_accion_en_curso():
@@ -347,7 +363,25 @@ class Partida(Escena):
         elif tipo == "daño":
             self.textos.append(TextoFlotante(f"-{cantidad}", COLOR_DAÑO, x, y -70))
         elif tipo == "fallo":
-            self.textos.append(TextoFlotante(f"-{cantidad}", COLOR_FALLO, x, y -70))            
+            self.textos.append(TextoFlotante(f"-{cantidad}", COLOR_FALLO, x, y -70))      
+
+    def comprobar_fin(self):
+        if not any(e.esta_vivo() for e in self.enemigos):
+            self.resultado = "victoria"
+        elif not any(a.esta_vivo() for a in self.aliados):
+            self.resultado = "derrota"
+        if self.resultado is not None:
+            self.espera_fin = PAUSA_FIN
+            self.cancelar_ataque()
+            self.unidad_seleccionada = None
+            self.alcance = {}    
+
+    def resumen(self):
+        return {
+            "Rondas jugadas": self.ronda,
+            "Enemigos eliminados": sum(1 for e in self.enemigos if not e.esta_vivo()),
+            "Aliados perdidos": sum(1 for a in self.aliados if not a.esta_vivo()),
+        }  
     #logica
     def actualizar(self, tiempo):
         for unidad in self.aliados + self.enemigos:
@@ -364,10 +398,19 @@ class Partida(Escena):
         for texto in self.textos:
             texto.actualizar(tiempo)
         self.textos = [t for t in self.textos if not t.terminado()]
-        self.tile_hover = self.mapa.tile_en_pantalla(*pygame.mouse.get_pos())
+        pos = pygame.mouse.get_pos()
+        self.tile_hover = None if self.hud.contiene(pos) else self.mapa.tile_en_pantalla(*pos)
+        self.hud.actualizar(tiempo)
+        if self.resultado is None and not self.hay_accion_en_curso():
+            self.comprobar_fin()
+        if self.resultado is not None:
+            self.espera_fin -= tiempo
+            if self.espera_fin <= 0:
+                self.juego.fin_de_partida(self.resultado, self.resumen())
+            return
         if self.turno == "enemigo":
             self.jugar_turno_enemigo(tiempo)
-        if (self.turno == "jugador" and not self.hay_accion_en_curso() and any(a.esta_vivo() for a in self.aliados) and not self.algun_aliado_puede_actuar()):
+        if (self.turno == "jugador" and not self.hay_accion_en_curso() and not self.algun_aliado_puede_actuar()):
             self.terminar_turno_jugador()
         if self.modo != "mover":
             self.actualizar_objetivo()
@@ -384,8 +427,8 @@ class Partida(Escena):
             self.dibujar_puntaje(self.unidad_seleccionada)
         for texto in self.textos:
             texto.dibujar(self.pantalla, self.fuente)
-        self.dibujar_info()
-        self.dibujar_turno()    
+        self.dibujar_turno()
+        self.hud.dibujar(self.pantalla)    
 
     def dibujar_efectos(self, capa):
         for efecto in self.efectos:
@@ -414,37 +457,24 @@ class Partida(Escena):
             imagen = self.fuente_chica.render(str(nota), True, COLOR_TEXTO)
             self.pantalla.blit(imagen, (x - imagen.get_width() // 2, y - imagen.get_height() // 2))
 
-    # info para el HUD
-    def dibujar_info(self):
-        u = self.unidad_seleccionada
-        if u is None:
-            return
-        especial = "listo" if u.enfriamiento == 0 else f"en {u.enfriamiento} turnos"
-        lineas = [u.nombre,
-                  f"Vida: {u.vida}/{u.vida_max}",
-                  f"Movimiento: {u.movimiento_restante}/{u.movimiento}",
-                  f"Especial: {especial}",
-                  f"Ataque: {u.ataque}",
-                  f"Mira hacia: {u.direccion}",
-                  f"Daño: {u.ataque} Alcance: {u.alcance_min} - {u.alcance_max}",
-                  f"Punteria: {u.punteria}%"]
-        for i, texto in enumerate(lineas):
-            imagen = self.fuente.render(texto, True, COLOR_TEXTO)
-            self.pantalla.blit(imagen, (20, 20 + i * 26))
-
     def dibujar_turno(self):
-        texto = "TURNO DEL JUGADOR" if self.turno == "jugador" else "TURNO ENEMIGO"
-        lineas = [f"{texto} - Ronda {self.ronda}", "Enter: terminar turno", "A - Atacar E - Especial"]
-        if self.objetivo is not None:
-            u = self.unidad_seleccionada
-            unidadObjetivo = self.unidad_en(*self.objetivo)
-            if self.modo == "atacar":
-                lineas.append(f"Atacar a {unidadObjetivo.nombre}: {u.punteria}% (daño {u.ataque})")
-            elif unidadObjetivo is not None:
-                lineas.append(f"Especial sobre {unidadObjetivo.nombre}")
-            else:
-                col, fila = self.objetivo
-                lineas.append(f"Especial en la casilla: ({col}, {fila})")
-        for i, linea in enumerate(lineas):
-            imagen = self.fuente.render(linea, True, COLOR_TEXTO)
-            self.pantalla.blit(imagen, (ANCHO - imagen.get_width() - 20, 20 + i * 26))
+        texto = "Tu turno" if self.turno == "jugador" else "Turno enemigo"
+        imagen = self.fuente.render(f"Ronda {self.ronda} - {texto}", True, COLOR_TEXTO)
+        self.pantalla.blit(imagen, (ANCHO - imagen.get_width() - 20, 20))
+        self.dibujar_info_objetivo()
+
+    def dibujar_info_objetivo(self):
+        if self.objetivo is None:
+            return
+        u = self.unidad_seleccionada
+        if self.modo == "atacar":
+            texto = f"{u.punteria}%  |  daño {u.ataque}"
+        elif self.unidad_en(*self.objetivo) is not None:
+            texto = "Usar especial"
+        else:
+            return
+        x, y = centro_de_casilla(*self.objetivo)
+        imagen = self.fuente.render(texto, True, COLOR_TEXTO)
+        caja = imagen.get_rect(center=(x, y - 85)).inflate(12, 6)
+        pygame.draw.rect(self.pantalla, (20, 20, 30), caja, border_radius=4)
+        self.pantalla.blit(imagen, imagen.get_rect(center=caja.center))

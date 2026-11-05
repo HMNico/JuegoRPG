@@ -1,6 +1,6 @@
-from src.unidad import Unidad
+from src.unidades.unidad import Unidad
 from config import COLOR_SELECCION_ENEMIGO
-from src.movimiento import distancia
+from src.tablero.movimiento import distancia
 
 
 class Enemigo(Unidad):

@@ -1,4 +1,4 @@
-from src.enemigo import Enemigo
+from src.unidades.enemigo import Enemigo
 
 SPRITES_ZOMBIE = {
     "quieto": ("zombie_idle.png", 4),

@@ -1,4 +1,4 @@
-from src.unidad import Unidad
+from src.unidades.unidad import Unidad
 from config import COLOR_SELECCION_ALIADO
 
 

@@ -1,5 +1,5 @@
-from src.aliado import Aliado
-from src.movimiento import calcular_alcance
+from src.unidades.aliado import Aliado
+from src.tablero.movimiento import calcular_alcance
 
 SPRITES_MEDIC = {
     "quieto": ("medic_idle.png", 4),

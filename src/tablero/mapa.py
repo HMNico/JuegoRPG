@@ -1,5 +1,5 @@
-from src.tile import Tile
-from src.isometria import pantalla_a_grilla
+from src.tablero.tile import Tile
+from src.tablero.isometria import pantalla_a_grilla
 from config import COLOR_HOVER, COLOR_ALCANCE, COLOR_ZONA_ATAQUE
 
 

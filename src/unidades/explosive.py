@@ -1,6 +1,6 @@
-from src.enemigo import Enemigo
-from src.aliado import Aliado
-from src.movimiento import distancia_diagonal
+from src.unidades.enemigo import Enemigo
+from src.unidades.aliado import Aliado
+from src.tablero.movimiento import distancia_diagonal
 
 SPRITES_EXPLOSIVE = {
     "quieto": ("explosive_idle.png", 4),

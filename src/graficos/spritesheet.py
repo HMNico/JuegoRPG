@@ -1,7 +1,7 @@
 """Recorta una hoja de sprites (spritesheet) en cuadros individuales."""
 import pygame
 from config import FILAS_HOJA, PROPORCION_PIES, ESCALA_SPRITE
-from src.recursos import cargar_imagen
+from src.graficos.recursos import cargar_imagen
 
 _cache = {}
 

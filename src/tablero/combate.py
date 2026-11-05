@@ -1,4 +1,4 @@
-from src.direcciones import DIRECCION_POR_PASO
+from src.tablero.direcciones import DIRECCION_POR_PASO
 import random
 
 def casillas_atacables(mapa, origen, alcance_min, alcance_max,ocupadas):

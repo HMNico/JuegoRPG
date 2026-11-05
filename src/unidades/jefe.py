@@ -1,4 +1,4 @@
-from src.enemigo import Enemigo
+from src.unidades.enemigo import Enemigo
 
 SPRITES_JEFE = {
     "quieto": ("boss_idle.png", 4),

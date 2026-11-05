@@ -1,7 +1,7 @@
 #utilizo tile como objeto, aca calculo su posicion y la dibujo tambien
 import pygame
 from config import TILE_ALTO, TILE_ANCHO, COLOR_BORDE, COLOR_TILE
-from src.isometria import grilla_a_pantalla
+from src.tablero.isometria import grilla_a_pantalla
 #Dibuja UN solo tile
 
 class Tile:

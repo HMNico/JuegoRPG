@@ -3,9 +3,9 @@ from typing import Self
 
 import pygame
 from config import (COLOR_ALIADO, COLOR_SOMBRA, DURACION_CUADRO, DURACION_PASO)
-from src.isometria import grilla_a_pantalla, centro_de_casilla
-from src.spritesheet import cargar_hoja
-from src.direcciones import FILA_DIRECCION, DIRECCION_POR_PASO, signo
+from src.tablero.isometria import grilla_a_pantalla, centro_de_casilla
+from src.graficos.spritesheet import cargar_hoja
+from src.tablero.direcciones import FILA_DIRECCION, DIRECCION_POR_PASO, signo
 
 RADIO = 12  # radio del círculo que se usa si no hay sprite
 ANIMACIONES_UNA_VEZ = ("atacar", "special", "hit", "muerte")   # no se repiten

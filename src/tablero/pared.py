@@ -26,7 +26,7 @@ class Pared:
         ]
 
     def orden_de_dibujo(self):
-        return (True, self.col + self.fila)
+        return (self.col + self.fila, True)
 
     def dibujar(self, pantalla, seleccionada=False):
         for puntos, color in self.caras:

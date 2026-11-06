@@ -18,6 +18,7 @@ class Soldado(Aliado):
     DANO_ESPECIAL = 5
     LANZAMIENTO_MIN= 3
     LANZAMIENTO_MAX = 5
+    SONIDO_ESPECIAL = "explosion"
     def __init__(self, nombre, col, fila,):
         super().__init__(nombre, col, fila, vida_max= 14, movimiento= 3, ataque= 4, alcance_min=1, alcance_max=3, punteria= 80, hojas=SPRITES_SOLDADO)
     def zona_especial(self, mapa, ocupadas):

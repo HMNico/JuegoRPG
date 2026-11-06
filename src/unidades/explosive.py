@@ -1,6 +1,5 @@
 from src.unidades.enemigo import Enemigo
 from src.unidades.aliado import Aliado
-from src.tablero.movimiento import distancia_diagonal
 
 SPRITES_EXPLOSIVE = {
     "quieto": ("explosive_idle.png", 4),
@@ -17,20 +16,11 @@ class Explosive(Enemigo):
     PESO_GRUPO = 60
     VIDA_BAJA = 3
     CUADRO_IMPACTO = 6
+    SONIDO_ESPECIAL = "explosion"
     def __init__(self, nombre, col, fila):
         super().__init__(nombre, col, fila, vida_max=10, movimiento=3, ataque=4, alcance_min=1, alcance_max=1, punteria= 80,hojas=SPRITES_EXPLOSIVE)
         self.direccion  = "SO"
 
-    def aliados_en_area(self, casilla, vivos):
-        return [a for a in vivos
-                if distancia_diagonal(casilla, (a.col, a.fila)) <= self.RADIO_EXPLOSION]
-    
-    def puntuar_casilla(self, casilla, juego, vivos):
-        puntaje = super().puntuar_casilla(casilla, juego, vivos)
-        cerca = len(self.aliados_en_area(casilla, vivos))
-        if cerca >= 2:
-            puntaje += self.PESO_GRUPO * cerca
-        return puntaje
 
     def elegir_especial(self, juego):
         if not self.puede_usar_especial():

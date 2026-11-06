@@ -59,6 +59,7 @@ import os
 CARPETA_BASE = os.path.dirname(os.path.abspath(__file__))
 CARPETA_SPRITES = os.path.join(CARPETA_BASE, "assets", "sprites")
 CARPETA_MAPAS = os.path.join(CARPETA_BASE, "assets", "mapas")
+CARPETA_SONIDOS = os.path.join(CARPETA_BASE, "assets", "sonidos")
 FILAS_HOJA = 4 #Las spritesheets tienen 4 filas todas (4 direcciones)
 PROPORCION_PIES = 0.94 #los pies estan al 94% del alto del cuadro
 ESCALA_SPRITE = 0.5          # se dibuja a la mitad de tamaño

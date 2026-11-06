@@ -13,6 +13,7 @@ from src.tablero.movimiento import *
 from src.tablero.isometria import centro_de_casilla
 from collections import deque
 from src.interfaz.hud import HUD
+from src.audio import sonido
 
 class Partida(Escena):
     def __init__(self, juego, numero_nivel=1):
@@ -293,6 +294,9 @@ class Partida(Escena):
         if atacante.esta_atacando() and not atacante.llego_al_impacto():
             return
         self.ataque_en_curso = None
+        nombre_sonido = atacante.SONIDO_ESPECIAL if tipo == "especial" else atacante.SONIDO_ATAQUE
+        if nombre_sonido:
+            sonido.efecto(nombre_sonido)
         if tipo == "especial":
             self.resolver_especial(atacante, objetivo)
             self.actualizar_alcance()
@@ -405,6 +409,10 @@ class Partida(Escena):
     #logica
     def actualizar(self, tiempo):
         for unidad in self.aliados + self.enemigos:
+            if unidad.mensaje:
+                x, y = unidad.centro_en_pantalla()
+                self.textos.append(TextoFlotante(unidad.mensaje, COLOR_DAÑO, x, y - 100))
+                unidad.mensaje = None
             unidad.actualizar(tiempo)
         u = self.unidad_en_movimiento
         if u is not None and not u.esta_caminando():

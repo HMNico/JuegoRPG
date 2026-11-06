@@ -1,20 +1,21 @@
-"""Una unidad del juego (soldado aliado o enemigo)."""
-from typing import Self
-
 import pygame
 from config import (COLOR_ALIADO, COLOR_SOMBRA, DURACION_CUADRO, DURACION_PASO)
-from src.tablero.isometria import grilla_a_pantalla, centro_de_casilla
+from src.tablero.isometria import centro_de_casilla
 from src.graficos.spritesheet import cargar_hoja
 from src.tablero.direcciones import FILA_DIRECCION, DIRECCION_POR_PASO, signo
+from src.audio import sonido
 
 RADIO = 12  # radio del círculo que se usa si no hay sprite
-ANIMACIONES_UNA_VEZ = ("atacar", "special", "hit", "muerte")   # no se repiten
+ANIMACIONES_UNA_VEZ = ("atacar", "special", "hit", "muerte", "enrage")   # no se repiten
+
 
 class Unidad:
     COOLDOWN_ESPECIAL = 2
     APUNTA_A_CASILLA = False #True = puede apuntar a una casilla vacia(sin unidad)
     EFECTO_ESPECIAL = None
     CUADRO_IMPACTO = None
+    SONIDO_ATAQUE = None
+    SONIDO_ESPECIAL = None
     def __init__(self, nombre, col, fila, vida_max, movimiento, ataque, alcance_min, alcance_max, punteria, hojas=None):
         self.nombre = nombre
         self.col = col
@@ -23,6 +24,7 @@ class Unidad:
         self.vida = vida_max
         self.ataque = ataque
         self.movimiento = movimiento
+        self.mensaje = None #Para el enrage del jefe
 
         #Para el modo ataque
         self.alcance_min = alcance_min
@@ -44,15 +46,17 @@ class Unidad:
         # --- Aspecto ---
         self.direccion = "SE"                              # hacia dónde mira (ver direcciones.py)
         self.accion = "quieto"                             # qué animación usa
-        self.animaciones = {}                              # {"quieto": HojaSprites, ...}
+        self.animaciones = self.cargar_animaciones(hojas) if hojas else {}
         self.cuadro_actual = 0          # qué columna de la hoja se muestra
         self.tiempo_acumulado = 0                          # ms que lleva mostrándose ese cuadro
-        if hojas:
-            for accion, (archivo, columnas) in hojas.items():
-                hoja = cargar_hoja(archivo, columnas)
-                if hoja:
-                    self.animaciones[accion] = hoja
 
+    def cargar_animaciones(self, hojas):
+        animaciones = {}
+        for accion, (archivo, columnas) in hojas.items():
+            hoja = cargar_hoja(archivo, columnas)
+            if hoja:
+                animaciones[accion] = hoja
+        return animaciones
     #Es el actualizar main. Para no llamar a todos los actualizar distintos
     def actualizar(self, tiempo):
         self.actualizar_movimiento(tiempo)
@@ -80,6 +84,7 @@ class Unidad:
         while self.progreso >= 1 and self.esta_caminando(): #
             self.progreso -= 1
             self.col, self.fila = self.camino.pop(0)
+            sonido.efecto("paso")
             if self.esta_caminando():
                 self.mirar_hacia(self.camino[0])
         if not self.esta_caminando():
@@ -175,7 +180,7 @@ class Unidad:
         self.cambiar_accion("hit" if self.esta_vivo() else "muerte")
 
     def orden_de_dibujo(self):
-        return (self.esta_vivo(), self.col + self.fila)
+        return (self.col + self.fila, self.esta_vivo())
 
     def esta_vivo(self):
         return self.vida > 0

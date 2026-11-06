@@ -3,12 +3,14 @@ from config import ANCHO, COLOR_FONDO, COLOR_TEXTO, COLOR_VICTORIA, COLOR_DERROT
 from src.escenas.escena import Escena
 from src.interfaz.boton import Boton
 from src.tablero.nivel import existe_nivel
+from src.audio import sonido
 
 class FinDePartida(Escena):
     def __init__(self, juego, resultado, resumen, numero_nivel):
         super().__init__(juego)
         centro_x = ANCHO // 2
         self.resultado = resultado
+        sonido.efecto("victoria" if resultado == "victoria" else "derrota")
         self.ultimo_nivel = resultado == "victoria" and not existe_nivel(numero_nivel + 1)
         if self.ultimo_nivel:
             self.resumen = juego.totales

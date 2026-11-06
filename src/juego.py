@@ -5,6 +5,7 @@ from src.escenas.menu import MenuPrincipal
 from src.escenas.fin_de_partida import FinDePartida
 from src.escenas.pausa import Pausa
 from src.escenas.opciones import Opciones
+from src.audio import sonido
 
 class Juego:
     """Tiene la ventana y el bucle principal. Le pasa todo a la escena actual."""
@@ -16,8 +17,9 @@ class Juego:
         self.corriendo = True
         self.escena = None
         self.ir_al_menu()
-        self.volumenes = {"Música": 0.7, "Efectos": 0.7}
+        self.volumenes = sonido.volumenes
         self.totales = {}
+        sonido.iniciar()
             
 
     def cambiar_escena(self, escena):
@@ -40,9 +42,11 @@ class Juego:
         pygame.quit()
 
     def ir_al_menu(self):
+        sonido.musica("musica_menu")
         self.cambiar_escena(MenuPrincipal(self))
 
     def nueva_partida(self, numero_nivel=1):
+        sonido.detener_musica()
         if numero_nivel == 1:
             self.totales = {}
         self.cambiar_escena(Partida(self, numero_nivel))

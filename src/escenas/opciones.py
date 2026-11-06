@@ -2,6 +2,7 @@ import pygame
 from config import ANCHO, COLOR_FONDO, COLOR_TEXTO
 from src.escenas.escena import Escena
 from src.interfaz.boton import Boton
+from src.audio import sonido
 
 class Opciones(Escena):
     PASO = 0.1
@@ -26,8 +27,7 @@ class Opciones(Escena):
         self.actualizar_botones()
 
     def cambiar(self, nombre, delta):
-        valor = self.juego.volumenes[nombre] + delta
-        self.juego.volumenes[nombre] = round(min(1.0, max(0.0, valor)), 1)
+        sonido.cambiar_volumen(nombre, self.juego.volumenes[nombre] + delta)
         self.actualizar_botones()
 
     def actualizar_botones(self):

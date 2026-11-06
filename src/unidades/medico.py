@@ -12,10 +12,10 @@ SPRITES_MEDIC = {
 
 class Medico(Aliado):
     COOLDOWN_ESPECIAL = 2
-    CURACION = 3
+    CURACION = 4
     ALCANCE_CURACION = 3
     def __init__(self, nombre, col, fila):
-        super().__init__(nombre, col, fila, vida_max= 8, movimiento= 4, ataque= 2, alcance_min= 1,alcance_max= 3, punteria= 80, hojas=SPRITES_MEDIC)
+        super().__init__(nombre, col, fila, vida_max= 10, movimiento= 4, ataque= 2, alcance_min= 1,alcance_max= 3, punteria= 80, hojas=SPRITES_MEDIC)
     def zona_especial(self, mapa, ocupadas):
         return set(calcular_alcance(mapa, (self.col, self.fila), self.ALCANCE_CURACION, mapa.paredes))
     def es_objetivo_especial(self, unidad):

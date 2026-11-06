@@ -1,6 +1,6 @@
 import pygame
-from config import (COLOR_BOTON, COLOR_BOTON_HOVER, COLOR_BOTON_DESHABILITADO,
-                    COLOR_BORDE_BOTON, COLOR_TEXTO, COLOR_TEXTO_DESHABILITADO)
+from config import (COLOR_BOTON, COLOR_BOTON_HOVER, COLOR_BOTON_DESHABILITADO, COLOR_BORDE_BOTON, COLOR_TEXTO, COLOR_TEXTO_DESHABILITADO)
+from src.audio import sonido
 
 class Boton:
     def __init__(self, texto, centro, accion, ancho=240, alto=50):
@@ -17,6 +17,7 @@ class Boton:
         if (self.habilitado and evento.type == pygame.MOUSEBUTTONDOWN
                 and evento.button == 1 and self.esta_encima(evento.pos)):
             self.accion()
+            sonido.efecto("boton")
             return True
         return False
 

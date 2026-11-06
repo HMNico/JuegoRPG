@@ -13,6 +13,7 @@ SPRITES_SPITTER = {
 class Spitter(Enemigo):
     PESO_PELIGRO = 30
     BONUS_Medico = 50
+    SONIDO_ATAQUE = "escupitajo"
     def __init__(self, nombre, col, fila):
         super().__init__(nombre, col, fila, vida_max=6, movimiento=3, ataque=3, alcance_min=3, alcance_max=4, punteria= 65, hojas=SPRITES_SPITTER)
         self.direccion  = "SO"

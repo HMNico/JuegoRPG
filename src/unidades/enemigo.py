@@ -9,7 +9,9 @@ class Enemigo(Unidad):
     PESO_ATAQUE = 100 
     PESO_DISTANCIA = 1
     PESO_VIDA = 2
+    PESO_GRUPO = 0
     PESO_PELIGRO = 0
+    SONIDO_ATAQUE = "golpe"
     def elegir_destino(self, alcance, partida):
         vivos = [a for a in partida.aliados if a.esta_vivo()]
         if not vivos:
@@ -24,7 +26,15 @@ class Enemigo(Unidad):
         puntaje -= self.PESO_DISTANCIA * self.distancia_de_interes(casilla, vivos, partida)
         if self.PESO_PELIGRO:
             puntaje -= self.PESO_PELIGRO * len(partida.amenazas_en(casilla, self))
+        if self.PESO_GRUPO:
+            cerca = len(self.aliados_en_area(casilla, vivos))
+            if cerca >= 2:
+                puntaje += self.PESO_GRUPO * cerca
         return puntaje
+
+    def aliados_en_area(self, casilla, vivos):
+        area = self.area_especial(casilla)
+        return [a for a in vivos if (a.col, a.fila) in area]
     
     def puntuar_objetivo(self, aliado):
         return self.PESO_ATAQUE - self.PESO_VIDA * aliado.vida

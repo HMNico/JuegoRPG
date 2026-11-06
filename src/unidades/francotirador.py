@@ -14,6 +14,7 @@ SPRITES_FRANCOTIRADOR = {
 class Francotirador(Aliado):
     COOLDOWN_ESPECIAL = 5
     DANO_ESPECIAL = 10
+    SONIDO_ESPECIAL = "disparo"
     def __init__(self, nombre, col, fila):
         super().__init__(nombre, col, fila, vida_max=10, movimiento=3, ataque=7, alcance_min=5,alcance_max=6, punteria= 75, hojas=SPRITES_FRANCOTIRADOR)
     def zona_especial(self, mapa, ocupadas):

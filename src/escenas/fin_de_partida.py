@@ -10,6 +10,7 @@ class FinDePartida(Escena):
         super().__init__(juego)
         centro_x = ANCHO // 2
         self.resultado = resultado
+        sonido.detener_musica()
         sonido.efecto("victoria" if resultado == "victoria" else "derrota")
         self.ultimo_nivel = resultado == "victoria" and not existe_nivel(numero_nivel + 1)
         if self.ultimo_nivel:

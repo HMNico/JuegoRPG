@@ -1,6 +1,6 @@
 from src.tablero.tile import Tile
 from src.tablero.isometria import pantalla_a_grilla
-from config import COLOR_HOVER, COLOR_ALCANCE, COLOR_ZONA_ATAQUE
+from config import COLOR_HOVER, COLOR_ALCANCE, COLOR_ZONA_ATAQUE, COLOR_AREA_IMPACTO
 from src.tablero.pared import Pared
 
 
@@ -39,13 +39,15 @@ class Mapa:
         casillax,casillay = pantalla_a_grilla(x,y)
         return self.obtener_tile(casillax, casillay) 
     
-    def dibujar(self, pantalla, tile_hover=None, color_hover= COLOR_HOVER, alcance=(), atacables=(), color_zona=COLOR_ZONA_ATAQUE):
+    def dibujar(self, pantalla, tile_hover=None, color_hover= COLOR_HOVER, alcance=(), atacables=(), color_zona=COLOR_ZONA_ATAQUE, area=()):
         for fila in self.tiles:
             for tile in fila:
                 if tile is tile_hover:
                     color = color_hover if tile is tile_hover else None
                 elif (tile.col, tile.fila) in alcance:
                     color = COLOR_ALCANCE
+                elif (tile.col, tile.fila) in area:
+                    color = COLOR_AREA_IMPACTO
                 elif (tile.col, tile.fila) in atacables:
                     color = color_zona
                 else:

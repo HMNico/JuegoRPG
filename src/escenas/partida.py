@@ -1,6 +1,6 @@
 #Este archivo es el bucle principal
 import pygame
-from config import ANCHO, COLOR_FONDO,  COLOR_TEXTO, COLOR_HOVER, COLOR_HOVER_ENEMIGO, COLOR_HOVER_ALIADO, COLOR_DAÑO, COLOR_FALLO, COLOR_ZONA_ATAQUE, COLOR_ZONA_CURA, COLOR_CURA, PAUSA_ENTRE_ENEMIGOS, PAUSA_ANTES_DE_ATACAR, PAUSA_FIN
+from config import ANCHO, COLOR_FONDO,  COLOR_TEXTO, COLOR_HOVER, COLOR_HOVER_ENEMIGO, COLOR_HOVER_ALIADO, COLOR_DAÑO, COLOR_FALLO, COLOR_ZONA_ATAQUE, COLOR_ZONA_ESPECIAL, COLOR_CURA, PAUSA_ENTRE_ENEMIGOS, PAUSA_ANTES_DE_ATACAR, PAUSA_FIN
 from src.escenas.escena import Escena
 from src.tablero.nivel import cargar_nivel, crear_unidad
 from src.unidades.unidad import Unidad
@@ -14,6 +14,7 @@ from src.tablero.isometria import centro_de_casilla
 from collections import deque
 from src.interfaz.hud import HUD
 from src.audio import sonido
+
 
 class Partida(Escena):
     def __init__(self, juego, numero_nivel=1):
@@ -446,8 +447,8 @@ class Partida(Escena):
     #dibujar
     def dibujar(self, pantalla):
         self.pantalla.fill(COLOR_FONDO)
-        color_zona = COLOR_ZONA_CURA if self.modo == "especial" else COLOR_ZONA_ATAQUE
-        self.mapa.dibujar(self.pantalla, self.tile_hover, self.color_del_hover(), self.alcance, self.atacables, color_zona)
+        color_zona = COLOR_ZONA_ESPECIAL if self.modo == "especial" else COLOR_ZONA_ATAQUE
+        self.mapa.dibujar(self.pantalla, self.tile_hover, self.color_del_hover(), self.alcance, self.atacables, color_zona, self.area_apuntada())
         self.dibujar_efectos("debajo")
         self.dibujar_unidades()
         self.dibujar_efectos("encima")
@@ -491,6 +492,12 @@ class Partida(Escena):
         self.pantalla.blit(imagen, (ANCHO - imagen.get_width() - 20, 20))
         self.dibujar_info_objetivo()
 
+    def area_apuntada(self):
+        if self.modo != "especial" or self.objetivo is None:
+            return set()
+        area = self.unidad_seleccionada.area_especial(self.objetivo)
+        return {c for c in area if self.mapa.esta_dentro(*c)}
+    
     def dibujar_info_objetivo(self):
         if self.objetivo is None:
             return

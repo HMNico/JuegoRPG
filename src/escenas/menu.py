@@ -12,7 +12,8 @@ class MenuPrincipal(Escena):
         self.botones = [
             Boton("Jugar", (centro_x, 360), juego.nueva_partida),
             Boton("Opciones", (centro_x, 430), juego.abrir_opciones),
-            Boton("Salir", (centro_x, 500), juego.salir),
+            Boton("Cómo jugar", (centro_x, 500), juego.abrir_controles),
+            Boton("Salir", (centro_x, 570), juego.salir),
         ]
 
     def manejar_evento(self, evento):

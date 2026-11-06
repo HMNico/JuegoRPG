@@ -25,10 +25,11 @@ COLOR_SELECCION_ENEMIGO = (255, 0, 0)
 COLOR_SOMBRA = (30, 45, 30)
 COLOR_TEXTO = (230, 230, 230)
 COLOR_ZONA_ATAQUE = (110, 60, 60)
-COLOR_ZONA_CURA = (60, 130, 90)
+COLOR_ZONA_ESPECIAL = (160, 90, 210)
 COLOR_CURA = (120, 255, 140)
 COLOR_DAÑO = (255, 90, 90)
 COLOR_FALLO = (200, 200, 200)
+COLOR_AREA_IMPACTO = (230, 140, 40)
 
 #Escenas
 PAUSA_FIN = 1500 # ms entre el último golpe y la pantalla final
@@ -65,7 +66,6 @@ PROPORCION_PIES = 0.94 #los pies estan al 94% del alto del cuadro
 ESCALA_SPRITE = 0.5          # se dibuja a la mitad de tamaño
 DURACION_CUADRO = 120
 
-#Paredes
 #Paredes
 ALTURA_PARED = 30
 COLOR_PARED_TECHO = (150, 150, 160)
